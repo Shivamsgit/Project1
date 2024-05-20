@@ -37,6 +37,7 @@ steps:
     publishWebProjects: true
     arguments: '-C $(Buildconfiguration) --output $(Build.ArtifactStagingDirectory)'
 - task: PublishBuildArtifacts@1
+  displayName: 'Publish Artifact'
   inputs:
     PathtoPublish: '$(Build.ArtifactStagingDirectory)'
     ArtifactName: 'drop'
