@@ -5,40 +5,52 @@
 
 trigger:
 - main
-variables:
-  ProjectName: '**/*.sln'
-  Buildconfiguration: 'Release'
+stages:
+  stage:'Buildstage'
+  jobs:
+    job:'Buildjob'
 
-pool:
-    vmImage: windows-latest
+    pool:
+        vmImage: windows-latest
+    variables:
+      ProjectName: '**/*.sln'
+      Buildconfiguration: 'Release'
 
-steps:
-- script: 
-   echo start writing commands here
-   It is an importanyt build and release.
-  displayName: 'Script'
+    steps:
+    - script: 
+      echo start writing commands here
+      It is an importanyt build and release.
+      displayName: 'Script'
 
-- task: DotNetCoreCLI@2
-  displayName: 'Restore'
-  inputs:
-    command: 'restore'
-    projects: $(ProjectName)
-    feedsToUse: 'select'
-- task: DotNetCoreCLI@2
-  displayName: 'Build'
-  inputs:
-    command: 'build'
-    projects: $(ProjectName)
-    arguments: '--Configuration $(Buildconfiguration)'
-- task: DotNetCoreCLI@2
-  displayName: 'Publish'
-  inputs:
-    command: 'publish'
-    publishWebProjects: true
-    arguments: '-C $(Buildconfiguration) --output $(Build.ArtifactStagingDirectory)'
-- task: PublishBuildArtifacts@1
-  displayName: 'Publish Artifact'
-  inputs:
-    PathtoPublish: '$(Build.ArtifactStagingDirectory)'
-    ArtifactName: 'drop'
-    publishLocation: 'Container'
+    - task: DotNetCoreCLI@2
+      displayName: 'Restore'
+      inputs:
+        command: 'restore'
+        projects: $(ProjectName)
+        feedsToUse: 'select'
+    - task: DotNetCoreCLI@2
+      displayName: 'Build'
+      inputs:
+        command: 'build'
+        projects: $(ProjectName)
+        arguments: '--Configuration $(Buildconfiguration)'
+    - task: DotNetCoreCLI@2
+      displayName: 'Publish'
+      inputs:
+        command: 'publish'
+        publishWebProjects: true
+        arguments: '-C $(Buildconfiguration) --output 
+    - task: PublishPipelineArtifact@1
+      inputs:
+        targetPath: '$(Build.ArtifactStagingDirectory)'
+        artifact: 'drop'
+        publishLocation: 'pipeline''
+
+    - task: PublishBuildArtifacts@1
+      displayName: 'Publish Artifact'
+      inputs:
+        PathtoPublish: '$(Build.ArtifactStagingDirectory)'
+        ArtifactName: 'drop'
+        publishLocation: 'Container'
+    
+  stage
