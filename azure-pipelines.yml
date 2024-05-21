@@ -1,36 +1,102 @@
 trigger:
 - main
+stages:
+- stage: 'Build Stage'
+    jobs:
+    - job: 'Build Job'
+    pool:
+      vmImage: windows-latest
 
-pool:
-  vmImage: windows-latest
+    steps:
 
-steps:
+    - task: DotNetCoreCLI@2
+      inputs:
+        command: 'restore'
+        projects: '**/*.sln'
+        feedsToUse: 'select'
+    - task: DotNetCoreCLI@2
+      inputs:
+        command: 'build'
+        projects: '**/*.sln'
+        arguments: '--Configuration Release'
 
-- task: DotNetCoreCLI@2
-  inputs:
-    command: 'restore'
-    projects: '**/*.sln'
-    feedsToUse: 'select'
-- task: DotNetCoreCLI@2
-  inputs:
-    command: 'build'
-    projects: '**/*.sln'
-    arguments: '--Configuration Release'
+    - task: DotNetCoreCLI@2
+      inputs:
+        command: 'publish'
+        publishWebProjects: true
+        arguments: '--C Release --output $(Build.ArtifactStagingDirectory)'
 
-- task: DotNetCoreCLI@2
-  inputs:
-    command: 'publish'
-    publishWebProjects: true
-    arguments: '--C Release --output $(Build.ArtifactStagingDirectory)'
+    #- task: PublishBuildArtifacts@1
+    #  inputs:
+    #    PathtoPublish: '$(Build.ArtifactStagingDirectory)'
+    #    ArtifactName: 'drop'
+    #    publishLocation: 'Container'
 
-- task: PublishBuildArtifacts@1
-  inputs:
-    PathtoPublish: '$(Build.ArtifactStagingDirectory)'
-    ArtifactName: 'drop'
-    publishLocation: 'Container'
+    - task: PublishPipelineArtifact@1
+      inputs:
+        targetPath: '$(Pipeline.Workspace)'
+        artifact: 'drop'
+        publishLocation: 'pipeline'
 
-- task: PublishPipelineArtifact@1
-  inputs:
-    targetPath: '$(Pipeline.Workspace)'
-    artifact: 'drop'
-    publishLocation: 'pipeline'
+- stage: 'Deploy to Dev'
+  dependsOn: 'Build Stage'
+    jobs:
+     - job:'Download Artifact and Analysis job'
+    pool:
+        vmImage: windows-latest
+    steps:
+    - task: DownloadPipelineArtifact@2
+      inputs:
+        buildType: 'current'
+        artifactName: 'drop'
+        targetPath: '$(Pipeline.Workspace)'
+    
+    #- download: 'current'
+    #  artifact: 'drop'
+    - task: AzureRmWebAppDeployment@4
+      inputs:
+        ConnectionType: 'AzureRM'
+        appType: 'webApp'
+        WebAppName: 'Azure-pipeline-Dev-demo'
+        packageForLinux: '$(System.DefaultWorkingDirectory)/**/*.zip'
+
+- stage: 'Deploy to QA'
+  dependsOn: 'Deploy to Dev'
+    jobs:
+     - job:'Analysed Artifact publish to QA'
+    pool:
+        vmImage: windows-latest
+    steps:
+    - task: DownloadPipelineArtifact@2
+      inputs:
+        buildType: 'current'
+        artifactName: 'drop'
+        targetPath: '$(Pipeline.Workspace)'
+    
+    #- download: 'current'
+    #  artifact: 'drop'
+    - task: AzureRmWebAppDeployment@4
+      inputs:
+        ConnectionType: 'AzureRM'
+        appType: 'webApp'
+        WebAppName: 'Azure-pipeline-QA-demo'
+        packageForLinux: '$(System.DefaultWorkingDirectory)/**/*.zip' 
+
+- stage: 'Deploy to Prod'
+  dependsOn: 'Azure-pipeline-QA-demo'
+    jobs:
+     - job:'Analysed Artifact publish to QA'
+    pool:
+        vmImage: windows-latest
+    steps:
+    - task: DownloadPipelineArtifact@2
+      inputs:
+        buildType: 'current'
+        artifactName: 'drop'
+        targetPath: '$(Pipeline.Workspace)'
+    
+    #- download: 'current'
+    #  artifact: 'drop'
+    
+
+
