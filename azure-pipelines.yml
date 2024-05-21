@@ -102,15 +102,15 @@ stages:
       inputs:
         ConnectionType: 'AzureRM'
         appType: 'webApp'
-        WebAppName: '- task: AzureAppServiceManage@0
-  inputs:
-    Action: 'Swap Slots'
-    WebAppName: 'Azure-pipeline-Prod-demo'
-    SourceSlot: 'staging''
+        WebAppName: 'Azure-pipeline-Prod-demo'
         deployToSlotOrASE: true
         SlotName: 'staging'
         packageForLinux: '$(System.DefaultWorkingDirectory)/**/*.zip'
 
-    
+    - task: AzureAppServiceManage@0
+      inputs:
+        Action: 'Swap Slots'
+        WebAppName: 'Azure-pipeline-Prod-demo'
+        SourceSlot: 'Staging'
 
 
