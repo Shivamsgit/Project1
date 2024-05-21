@@ -84,6 +84,7 @@ stages:
 
 - stage: 'Deploy to Prod'
   dependsOn: 'Azure-pipeline-QA-demo'
+
     jobs:
      - job:'Analysed Artifact publish to QA'
     pool:
@@ -97,6 +98,19 @@ stages:
     
     #- download: 'current'
     #  artifact: 'drop'
+    - task: AzureRmWebAppDeployment@4
+      inputs:
+        ConnectionType: 'AzureRM'
+        appType: 'webApp'
+        WebAppName: '- task: AzureAppServiceManage@0
+  inputs:
+    Action: 'Swap Slots'
+    WebAppName: 'Azure-pipeline-Prod-demo'
+    SourceSlot: 'staging''
+        deployToSlotOrASE: true
+        SlotName: 'staging'
+        packageForLinux: '$(System.DefaultWorkingDirectory)/**/*.zip'
+
     
 
 
